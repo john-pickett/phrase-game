@@ -53,3 +53,15 @@ export const getGamePlayers = async (short_code: string): Promise<Player[]> => {
 }
 
 // `SELECT * FROM players p WHERE p.id = ANY($1::uuid[])` 
+
+export const updatePlayerReady = async (playerID: string) => {
+  const text = `UPDATE players SET ready = true WHERE id = $1 RETURNING *;`;
+  const values = [playerID]
+  try {
+    const record = await db.query(text, values);
+    return record.rows[0];
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}

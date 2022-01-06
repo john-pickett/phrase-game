@@ -9,7 +9,12 @@ const db = require('./db');
 const SSE = require('express-sse');
 import { populateMasterPhrases } from "./methods/phrases/Phrases";
 import { openNewGame, getGameAndPlayers } from "./methods/games/Games";
-import { createNewPlayerRecord, getGamePlayers, addPlayerToGameMain } from "./methods/players/Players";
+import { 
+  createNewPlayerRecord, 
+  getGamePlayers, 
+  addPlayerToGameMain,
+  updatePlayerReady
+} from "./methods/players/Players";
 
 const app = express();
 
@@ -55,8 +60,8 @@ app.post('/populate', async (req: any, res: any) => {
 app.post('/new-game', async (req: any, res: any) => {
   const { player } = req.body;
   try {
-    const owner = await createNewPlayerRecord(player);
-    const game = await openNewGame(owner);
+    const playerRec = await createNewPlayerRecord(player);
+    const game = await openNewGame(playerRec);
     res.send(game);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
@@ -90,3 +95,14 @@ app.get('/game/:short_code/players', async (req: any, res: any) => {
   }
 });
 
+app.put('/player-ready/:playerID', async (req: any, res: any) => {
+  console.log(req.params);
+  
+  const { playerID } = req.params;
+  try {
+    const result = await updatePlayerReady(playerID);
+    res.send(result);
+  } catch (err: any) {
+    res.status(err.code ? err.code : 400).send(err.toString());
+  }
+});

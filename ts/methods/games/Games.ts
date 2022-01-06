@@ -2,17 +2,18 @@ export {}
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db/index');
 import { getGamePlayers } from "../players/Players";
+import { createNewPlayerGameM2MRecord } from "../player-game/PlayerGame";
 import { Game, GameStatus } from "../../data/Game";
 import { Player } from "../../data/Player";
 
 
-export const openNewGame = async (owner: Player): Promise<Game> => {
+export const openNewGame = async (player: Player): Promise<Game> => {
   const id = uuidv4();
   const short_code = generateShortCode();
   const status = GameStatus.OPEN;
-  const ownerID = owner.id;
+  const playerID = player.id;
   try {
-    const game = createNewGameRecord(id, short_code, status, ownerID);
+    const game = createNewGameRecord(id, short_code, status, playerID);
     return game;
   } catch (err: any) {
     console.log(err);
