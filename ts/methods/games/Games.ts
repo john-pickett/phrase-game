@@ -12,8 +12,9 @@ export const openNewGame = async (player: Player): Promise<Game> => {
   const short_code = generateShortCode();
   const status = GameStatus.OPEN;
   const playerID = player.id;
+  const playerCount = 1;
   try {
-    const game = createNewGameRecord(id, short_code, status, playerID);
+    const game = createNewGameRecord(id, short_code, status, playerID, playerCount);
     return game;
   } catch (err: any) {
     console.log(err);
@@ -35,10 +36,10 @@ const generateShortCode = (): string => {
   return short_code.join('');
 }
 
-const createNewGameRecord = async (id: string, short_code: string, status: GameStatus, owner: string): Promise<Game> => {
+const createNewGameRecord = async (id: string, short_code: string, status: GameStatus, owner: string, playerCount: number): Promise<Game> => {
   // const players = [owner];
-  const text = `INSERT INTO games (id, short_code, status, players) VALUES($1, $2, $3, $4) RETURNING *`;
-  const values = [id, short_code, status, [owner]];
+  const text = `INSERT INTO games (id, short_code, status, player_count, players) VALUES($1, $2, $3, $4, $5) RETURNING *`;
+  const values = [id, short_code, status, playerCount, [owner]];
 
   // SELECT, FROM, JOIN, ON, WHERE
   try {
@@ -62,7 +63,7 @@ const createNewGameRecord = async (id: string, short_code: string, status: GameS
 
 export const addPlayerToGame = async (short_code: string, playerID: string): Promise<Game> => {
   // find game by short_code, add player to players
-  const text = `UPDATE games SET players = array_append(players, $2::uuid) WHERE short_code = $1 RETURNING *`;
+  const text = `UPDATE games SET player_count = player_count + 1, players = array_append(players, $2::uuid) WHERE short_code = $1 RETURNING *`;
   const values = [short_code, playerID];
 
   try {

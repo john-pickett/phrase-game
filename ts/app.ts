@@ -97,7 +97,7 @@ app.get('/game/:short_code/players', async (req: any, res: any) => {
 
 app.put('/player-ready/:playerID', async (req: any, res: any) => {
   console.log(req.params);
-  
+  // TODO: On ready, check if all players are ready, and if so start game
   const { playerID } = req.params;
   try {
     const result = await updatePlayerReady(playerID);
