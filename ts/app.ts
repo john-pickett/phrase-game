@@ -7,8 +7,8 @@ const { v4: uuidv4 } = require('uuid');
 const morgan = require('morgan');
 const db = require('./db');
 import { populateMasterPhrases } from "./methods/phrases/Phrases";
-import { openNewGame } from "./methods/games/Games";
-import { createNewPlayerRecord } from "./methods/players/Players";
+import { openNewGame, getGameAndPlayers } from "./methods/games/Games";
+import { createNewPlayerRecord, getGamePlayers, addPlayerToGameMain } from "./methods/players/Players";
 
 const app = express();
 
@@ -48,9 +48,24 @@ app.post('/new-game', async (req: any, res: any) => {
 
 app.post('/join-game', async (req: any, res: any) => {
   const short_code = req.query.code;
-  console.log(short_code);
+  const { player } = req.body;
+  // console.log(short_code);
   try {
-    res.send(short_code);
+    await addPlayerToGameMain(short_code, player);
+    const game = await getGameAndPlayers(short_code);
+    res.send(game);
+  } catch (err: any) {
+    res.status(err.code ? err.code : 400).send(err.toString());
+  }
+});
+
+app.get('/game/:short_code/players', async (req: any, res: any) => {
+  // console.log(req.params.id);
+  const { short_code } = req.params;
+  
+  try {
+    const players = await getGamePlayers(short_code);
+    res.send(players);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
   }

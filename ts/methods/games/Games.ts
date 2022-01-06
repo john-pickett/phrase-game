@@ -1,6 +1,7 @@
 export {}
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db/index');
+import { getGamePlayers } from "../players/Players";
 import { Game, GameStatus } from "../../data/Game";
 import { Player } from "../../data/Player";
 
@@ -34,23 +35,56 @@ const generateShortCode = (): string => {
 }
 
 const createNewGameRecord = async (id: string, short_code: string, status: GameStatus, owner: string): Promise<Game> => {
-  const text = `INSERT INTO games (id, short_code, status, owner) VALUES($1, $2, $3, $4) RETURNING *`;
-  const values = [id, short_code, status, owner];
+  // const players = [owner];
+  const text = `INSERT INTO games (id, short_code, status, players) VALUES($1, $2, $3, $4) RETURNING *`;
+  const values = [id, short_code, status, [owner]];
 
   // SELECT, FROM, JOIN, ON, WHERE
   try {
-    const game = await db.query(text, values);
-    const gameID = game.rows[0].id;
-    const selectText = `SELECT g.id, g.short_code, g.status, g.created_at, p.name 
-      FROM games g 
-      JOIN players p 
-      ON g.owner = p.id 
-      WHERE g.id = $1`;
-    const selectValues = [gameID]
-    const record = await db.query(selectText, selectValues)
-    return record.rows[0];
+    const gameData = await db.query(text, values);
+    const gameID = gameData.rows[0].id;
+    // console.log(gameData.rows[0]);
+    const game = gameData.rows[0];
+
+    const playersText = `SELECT * FROM players p WHERE p.id = ANY($1::uuid[])` 
+    const playersValues = [gameData.rows[0].players];
+    const players = await db.query(playersText, playersValues);
+    game.players = players.rows;
+
+    return game;
+    // return game.rows[0];
   } catch (err: any) {
     console.log(err);
 		throw new Error(err);
   } 
+}
+
+export const addPlayerToGame = async (short_code: string, playerID: string): Promise<Game> => {
+  // find game by short_code, add player to players
+  const text = `UPDATE games SET players = array_append(players, $2::uuid) WHERE short_code = $1 RETURNING *`;
+  const values = [short_code, playerID];
+
+  try {
+    const record = await db.query(text, values);
+    // console.log(record.rows);
+    return record.rows[0];
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
+
+export const getGameAndPlayers = async (short_code: string): Promise<Game> => {
+  const text = `SELECT * FROM games WHERE short_code = $1`;
+  const values = [short_code];
+
+  try {
+    const gameData = await db.query(text, values);
+    const game = gameData.rows[0];
+    game.players = await getGamePlayers(short_code);
+    return game;
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
 }
