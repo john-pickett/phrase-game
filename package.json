@@ -1,0 +1,36 @@
+{
+  "name": "blank-game-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf node_modules",
+    "dev": "ts-node-dev ts/app.ts --watch ts/*",
+    "postinstall": "tsc",
+    "start": "node dist/app.js"
+  },
+  "dependencies": {
+    "axios": "^0.21.0",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0",
+    "pg": "^8.5.1",
+    "ts-custom-error": "^3.2.0",
+    "ts-node": "^9.1.1",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.1.3",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/jest": "^26.0.20",
+    "@types/node": "^14.14.21",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.4.4"
+  },
+  "author": "",
+  "license": "ISC"
+}

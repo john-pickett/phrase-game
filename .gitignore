@@ -1,0 +1,8 @@
+# Env
+.env 
+
+# Node
+node_modules
+
+# TS Stuff
+dist
