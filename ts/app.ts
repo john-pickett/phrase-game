@@ -13,7 +13,8 @@ import {
   createNewPlayerRecord, 
   getGamePlayers, 
   addPlayerToGameMain,
-  updatePlayerReady
+  updatePlayerReady,
+  checkIfAllPlayersAreReady
 } from "./methods/players/Players";
 
 const app = express();
@@ -32,7 +33,11 @@ app.listen(port, () => {
 app.use(function (req: any, res: any, next: any) {
   res.flush = function () { /* Do nothing */ }
   next();
-})
+});
+
+app.get('/', (req: any, res: any) => {
+	res.send('Hello blank game');
+});
 
 /**
  * SERVER-SIDE EVENTS
@@ -42,10 +47,8 @@ app.use(function (req: any, res: any, next: any) {
 export const playerSSE = new SSE();
 app.get('/game-players/:short_code', playerSSE.init);
 
-
-app.get('/', (req: any, res: any) => {
-	res.send('Hello blank game');
-});
+export const gameStartSSE = new SSE();
+app.get('/game-start/:short_code', gameStartSSE.init);
 
 
 app.post('/populate', async (req: any, res: any) => {
@@ -57,6 +60,9 @@ app.post('/populate', async (req: any, res: any) => {
   }
 });
 
+/**
+ * ACUTAL GAME ENDPOINTS
+ */
 app.post('/new-game', async (req: any, res: any) => {
   const { player } = req.body;
   try {
@@ -77,7 +83,7 @@ app.post('/join-game', async (req: any, res: any) => {
     const game = await getGameAndPlayers(short_code);
     res.send(game);
     const players = await getGamePlayers(short_code)
-    playerSSE.send(players);
+    playerSSE.send(players); // sends current players to all players who have joined
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
   }
@@ -95,12 +101,17 @@ app.get('/game/:short_code/players', async (req: any, res: any) => {
   }
 });
 
-app.put('/player-ready/:playerID', async (req: any, res: any) => {
+app.put('/player-ready/:playerID/:short_code', async (req: any, res: any) => {
   console.log(req.params);
   // TODO: On ready, check if all players are ready, and if so start game
-  const { playerID } = req.params;
+  const { playerID, short_code } = req.params;
   try {
     const result = await updatePlayerReady(playerID);
+    const allReady = await checkIfAllPlayersAreReady(short_code);
+    if (allReady) {
+      console.log('all players are ready');
+      playerSSE.send('game start');
+    }
     res.send(result);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());

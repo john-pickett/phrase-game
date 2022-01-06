@@ -65,3 +65,14 @@ export const updatePlayerReady = async (playerID: string) => {
 		throw new Error(err);
   }
 }
+
+export const checkIfAllPlayersAreReady = async (short_code: string): Promise<boolean> => {
+  // find players by game getGamePlayers
+  try {
+    const players = await getGamePlayers(short_code);
+    return !players.some((player: Player) => !player.ready);
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
