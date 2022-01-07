@@ -10,7 +10,7 @@ export const createNewPlayerRecord = async (name: string): Promise<Player> => {
   const values = [id, name];
   try {
     const record = await db.query(text, values);
-    console.log('create new player ', record.rows[0]);
+    // console.log('create new player ', record.rows[0]);
     
     return record.rows[0];
   } catch (err: any) {
