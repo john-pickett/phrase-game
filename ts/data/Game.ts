@@ -4,7 +4,8 @@ export interface Game {
   short_code: string;
   status: GameStatus
   owner: string;
-  players: Player[]
+  players: Player[];
+  socket_id: string;
 }
 
 export enum GameStatus {
