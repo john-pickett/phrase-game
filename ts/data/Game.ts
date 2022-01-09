@@ -5,7 +5,6 @@ export interface Game {
   status: GameStatus
   owner: string;
   players: Player[];
-  socket_id: string;
 }
 
 export enum GameStatus {

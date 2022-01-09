@@ -7,14 +7,14 @@ import { Game, GameStatus } from "../../data/Game";
 import { Player } from "../../data/Player";
 
 
-export const openNewGame = async (player: Player, socket_id: string): Promise<Game> => {
+export const openNewGame = async (player: Player): Promise<Game> => {
   const id = uuidv4();
   const short_code = generateShortCode();
   const status = GameStatus.OPEN;
   const playerID = player.id;
   const playerCount = 1;
   try {
-    const game = createNewGameRecord(id, short_code, status, playerID, playerCount, socket_id);
+    const game = createNewGameRecord(id, short_code, status, playerID, playerCount);
     return game;
   } catch (err: any) {
     console.log(err);
@@ -36,11 +36,11 @@ const generateShortCode = (): string => {
   return short_code.join('');
 }
 
-const createNewGameRecord = async (id: string, short_code: string, status: GameStatus, owner: string, playerCount: number, socket_id: string): Promise<Game> => {
+const createNewGameRecord = async (id: string, short_code: string, status: GameStatus, owner: string, playerCount: number): Promise<Game> => {
   // const players = [owner];
-  const text = `INSERT INTO games (id, short_code, status, player_count, socket_id, players) 
-    VALUES($1, $2, $3, $4, $5, $6) RETURNING *`;
-  const values = [id, short_code, status, playerCount, socket_id, [owner]];
+  const text = `INSERT INTO games (id, short_code, status, player_count, players) 
+    VALUES($1, $2, $3, $4, $5) RETURNING *`;
+  const values = [id, short_code, status, playerCount, [owner]];
 
   // SELECT, FROM, JOIN, ON, WHERE
   try {
@@ -60,19 +60,6 @@ const createNewGameRecord = async (id: string, short_code: string, status: GameS
     console.log(err);
 		throw new Error(err);
   } 
-}
-
-export const getGameSocketIDByShortCode = async (short_code: string): Promise<string> => {
-  const text = `SELECT socket_id FROM games WHERE short_code = $1;`;
-  const values = [short_code];
-
-  try {
-    const id = await db.query(text, values);
-    return id.rows[0];
-  } catch (err: any) {
-    console.log(err);
-		throw new Error(err);
-  }
 }
 
 export const addPlayerToGame = async (short_code: string, playerID: string): Promise<Game> => {

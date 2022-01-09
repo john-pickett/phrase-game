@@ -35,6 +35,7 @@ const io = new Server(httpServer, {
   }
 });
 
+
 const port = process.env.PORT;
 
 httpServer.listen(port, () => { 
@@ -46,8 +47,9 @@ const emitEvent = async (event: string, socketID: string, payload: {}) => {
   io.to(socketID).emit(event, payload);
 }
 
+// TODO: What if we use the Game ShortCode as the socket_id for all players in that game?
 io.on('connection', async (socket: any) => {
-  console.log('a user connected', socket.id);
+  console.log(`user id ${socket.id} connected`);
   const socket_id = socket.id;
 
   socket.join(socket_id); // joins to unique user socket
@@ -55,19 +57,21 @@ io.on('connection', async (socket: any) => {
     action: "set_socket",
     id: socket.id
   });
+
+  app.set("socket", socket);
   
 });
 
-// io.on('game-id', async (socket: any) => {
-//   console.log('game-id');
-//   console.log(socket);
+io.on('onAny', (socket: any) => {
+  console.log('on any ', socket);
   
-// })
+});
+
+
 
 app.get('/', (req: any, res: any) => {
 	res.send('Hello blank game');
 });
-
 
 app.post('/populate', async (req: any, res: any) => {
   try {
@@ -82,46 +86,51 @@ app.post('/populate', async (req: any, res: any) => {
  * ACTUAL GAME ENDPOINTS
  */
 app.post('/new-game', async (req: any, res: any) => {
-  const { player, socket_id } = req.body;
-  console.log(req.body);
+  const { player } = req.body;
+  // console.log(req.body);
   
   try {
     const playerRec = await createNewPlayerRecord(player);
-    const game = await openNewGame(playerRec, socket_id);
+    const game = await openNewGame(playerRec);
     const short_code = game.short_code;
-    emitEvent("connected", socket_id, { action: "new_game" });
-    // io.to(socket_id).emit("connected", {
-    //   action: 'new_game',
-    //   code: short_code
-    // });
-    // socket.join(short_code);
+    // TODO: Different channel for connection vs game events?
+    emitEvent("connected", short_code, { action: "new_game" }); 
+    
     res.send(game);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
   }
 });
 
-app.post('/join-game', async (req: any, res: any) => {
-  const short_code = req.query.code;
-  // console.log(req.query);
+// app.use('/api/taskRequest', taskRequest);
+
+
+
+// const joinGame = async () => {
+//   console.log('join game');
   
-  const { player } = req.body;
-  // console.log(short_code);
-  try {
-    await addPlayerToGameMain(short_code, player);
-    const game = await getGameAndPlayers(short_code);
-    // TODO: get socket_id from game?
-    
-    emitEvent("connected", game.socket_id, { action: "new_player" });
-    // io.to(socket_id).emit("connected", {
-    //   action: 'new_player',
-    //   code: short_code
-    // });
-    res.send(game);
-  } catch (err: any) {
-    res.status(err.code ? err.code : 400).send(err.toString());
-  }
-});
+  app.post('/join-game', async (req: any, res: any) => {
+    const short_code = req.query.code;
+    const { player } = req.body;
+  
+    try {
+      await addPlayerToGameMain(short_code, player);
+      const game = await getGameAndPlayers(short_code);
+      // TODO: Subscribe Player 2 to Game socket
+      // Need to send to client, trigger API call after they join??
+      const socket = req.app.get("socket");
+      socket.join(short_code);
+      
+      emitEvent("connected", game.short_code, { action: "new_player" });
+      res.send(game);
+    } catch (err: any) {
+      res.status(err.code ? err.code : 400).send(err.toString());
+    }
+  });
+
+// }
+
+// app.use('/join-game', joinGame)
 
 app.get('/game/:short_code/players', async (req: any, res: any) => {
   // console.log(req.params.id);
@@ -144,7 +153,7 @@ app.put('/player-ready/:playerID/:short_code', async (req: any, res: any) => {
     const allReady = await checkIfAllPlayersAreReady(short_code);
     if (allReady) {
       console.log('all players are ready');
-      io.to(short_code).emit("all-players-ready");
+      io.to(short_code).emit("all_players_ready");
     }
     res.send(result);
   } catch (err: any) {
