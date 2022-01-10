@@ -4,6 +4,17 @@ const db = require('../../db/index');
 import { Phrase } from '../../data/Phrase';
 import masterPhrases from './MasterPhrases.json';
 
+export const getSetOfPhrasesForGame = async () => {
+  const text = `SELECT * FROM phrases`;
+  try {
+    const records = await db.query(text, null);
+    return records.rows;
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
+
 export const populateMasterPhrases = async (): Promise<Phrase[]> => {
   const records = [];
   try {

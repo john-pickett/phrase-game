@@ -8,7 +8,10 @@ const express = require('express');
 import { createServer } from "http";
 import { Server } from "socket.io";
 const db = require('./db');
-import { populateMasterPhrases } from "./methods/phrases/Phrases";
+import { 
+  populateMasterPhrases, 
+  getSetOfPhrasesForGame 
+} from "./methods/phrases/Phrases";
 import { openNewGame, getGameAndPlayers } from "./methods/games/Games";
 import { 
   createNewPlayerRecord, 
@@ -91,7 +94,11 @@ app.post('/new-game', async (req: any, res: any) => {
     const game = await openNewGame(playerRec);
     game.playerID = playerRec.id;
     const short_code = game.short_code;
-    socket.join(short_code); // joining game owner to game socket id (game.short_code)
+    if (socket) {
+      // socket should always be defined when there is a client
+      // this if () is only for postman
+      socket.join(short_code); // joining game owner to game socket id (game.short_code)
+    }
     
     res.send(game);
   } catch (err: any) {
@@ -144,6 +151,17 @@ app.put('/player-ready/:playerID/:short_code', async (req: any, res: any) => {
       io.to(short_code).emit("connected", { action: "all_players_ready" });
     }
     res.send(result);
+  } catch (err: any) {
+    res.status(err.code ? err.code : 400).send(err.toString());
+  }
+});
+
+app.get('/game-start/:short_code', async (req: any, res: any) => {
+  const { short_code } = req.params;
+
+  try {
+    const phrases = await getSetOfPhrasesForGame();
+    res.send(phrases);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
   }
