@@ -20,12 +20,13 @@ import {
   updatePlayerReady,
   checkIfAllPlayersAreReady
 } from "./methods/players/Players";
-import { 
-  ServerToClientEvents, 
-  ClientToServerEvents, 
-  InterServerEvents, 
-  SocketData
-} from './data/Server';
+import { createNewGuessRecord } from "./methods/guesses/Guesses";
+// import { 
+//   ServerToClientEvents, 
+//   ClientToServerEvents, 
+//   InterServerEvents, 
+//   SocketData
+// } from './data/Server';
 
 const app = express();
 app.use(cors());
@@ -162,6 +163,18 @@ app.get('/game-start/:short_code', async (req: any, res: any) => {
   try {
     const phrases = await getSetOfPhrasesForGame();
     res.send(phrases);
+  } catch (err: any) {
+    res.status(err.code ? err.code : 400).send(err.toString());
+  }
+});
+
+app.post('/guess/:game/:player/:phrase', async (req: any, res: any) => {
+  const { game, player, phrase } = req.params;
+  const { guess } = req.body; 
+  const guessData = { player, game, phrase, guess };
+  try { 
+    const record = await createNewGuessRecord(guessData);
+    return record;
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
   }
