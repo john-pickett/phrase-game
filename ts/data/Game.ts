@@ -5,6 +5,7 @@ export interface Game {
   status: GameStatus
   owner: string;
   players: Player[];
+  playerID?: string;
 }
 
 export enum GameStatus {

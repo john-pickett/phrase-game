@@ -7,7 +7,6 @@ const deployedSSL = {
 	rejectUnauthorized: false
 }
 
-// TODO: Double check this connection on Heroku on next push
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
 	ssl: env === 'local-dev' ? localSSL : deployedSSL

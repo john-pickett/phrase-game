@@ -86,9 +86,11 @@ app.post('/new-game', async (req: any, res: any) => {
 
   
   try {
+    // TODO: Verify that playerID is in the response and accessible
     const socket = req.app.get("socket");
     const playerRec = await createNewPlayerRecord(player);
     const game = await openNewGame(playerRec);
+    game.playerID = playerRec.id;
     const short_code = game.short_code;
     socket.join(short_code); // joining game owner to game socket id (game.short_code)
     
@@ -104,9 +106,11 @@ app.post('/join-game', async (req: any, res: any) => {
   const { player } = req.body;
 
   try {
+    // TODO: Verify that playerID is in the response and accessible
     const socket = req.app.get("socket");
-    await addPlayerToGameMain(short_code, player);
+    const playerRec = await addPlayerToGameMain(short_code, player);
     const game = await getGameAndPlayers(short_code);
+    game.playerID = playerRec.playerID;
     // join game room
     socket.join(short_code);
     io.to(short_code).emit("connected", { action: "new_player" });

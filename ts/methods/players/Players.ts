@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../../db/index');
 import { addPlayerToGame } from "../games/Games";
 import { Player } from "../../data/Player";
+import { Game } from "../../data/Game";
 
 export const createNewPlayerRecord = async (name: string): Promise<Player> => {
   const id = uuidv4();
@@ -19,14 +20,15 @@ export const createNewPlayerRecord = async (name: string): Promise<Player> => {
   }
 }
 
-export const addPlayerToGameMain = async (short_code: string, player: string) => {
+export const addPlayerToGameMain = async (short_code: string, player: string): Promise<Game> => {
   // create new player record, get id
   // find game, add player to players
   // return game data
   try {
     const newPlayer = await createNewPlayerRecord(player);
-    await addPlayerToGame(short_code, newPlayer.id);
-    
+    const game = await addPlayerToGame(short_code, newPlayer.id);
+    game.playerID = newPlayer.id;
+    return game;
   } catch (err: any) {
     console.log(err);
 		throw new Error(err);
