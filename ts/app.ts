@@ -86,7 +86,6 @@ app.post('/new-game', async (req: any, res: any) => {
 
   
   try {
-    // TODO: Verify that playerID is in the response and accessible
     const socket = req.app.get("socket");
     const playerRec = await createNewPlayerRecord(player);
     const game = await openNewGame(playerRec);
@@ -106,7 +105,6 @@ app.post('/join-game', async (req: any, res: any) => {
   const { player } = req.body;
 
   try {
-    // TODO: Verify that playerID is in the response and accessible
     const socket = req.app.get("socket");
     const playerRec = await addPlayerToGameMain(short_code, player);
     const game = await getGameAndPlayers(short_code);
@@ -139,7 +137,7 @@ app.put('/player-ready/:playerID/:short_code', async (req: any, res: any) => {
   const { playerID, short_code } = req.params;
   try {
     const result = await updatePlayerReady(playerID);
-    // TODO: Emit update players
+    io.to(short_code).emit("connected", { action: "update_players" });
     const allReady = await checkIfAllPlayersAreReady(short_code);
     if (allReady) {
       console.log('all players are ready');
