@@ -17,7 +17,7 @@ import {
   createNewPlayerRecord, 
   getGamePlayers, 
   addPlayerToGameMain,
-  updatePlayerReady,
+  updatePlayerStatus,
   checkIfAllPlayersAreReady
 } from "./methods/players/Players";
 import { processPlayerGameGuesses } from "./methods/guesses/Guesses";
@@ -139,12 +139,16 @@ app.get('/game/:short_code/players', async (req: any, res: any) => {
   }
 });
 
-app.put('/player-ready/:playerID/:short_code', async (req: any, res: any) => {
+/**
+ * Updates Player Status
+ */
+app.put('/player-status/:playerID/:short_code', async (req: any, res: any) => {
   // console.log(req.params);
+  const { status } = req.body;
 
   const { playerID, short_code } = req.params;
   try {
-    const result = await updatePlayerReady(playerID);
+    const result = await updatePlayerStatus(playerID, status);
     io.to(short_code).emit("connected", { action: "update_players" });
     const allReady = await checkIfAllPlayersAreReady(short_code);
     if (allReady) {

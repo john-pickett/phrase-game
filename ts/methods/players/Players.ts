@@ -2,7 +2,7 @@ export {}
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db/index');
 import { addPlayerToGame } from "../games/Games";
-import { Player } from "../../data/Player";
+import { Player, PlayerStatus } from "../../data/Player";
 import { Game } from "../../data/Game";
 
 export const createNewPlayerRecord = async (name: string): Promise<Player> => {
@@ -56,9 +56,9 @@ export const getGamePlayers = async (short_code: string): Promise<Player[]> => {
 
 // `SELECT * FROM players p WHERE p.id = ANY($1::uuid[])` 
 
-export const updatePlayerReady = async (playerID: string) => {
-  const text = `UPDATE players SET ready = true WHERE id = $1 RETURNING *;`;
-  const values = [playerID]
+export const updatePlayerStatus = async (playerID: string, status: string) => {
+  const text = `UPDATE players SET status = $2 WHERE id = $1 RETURNING *;`;
+  const values = [playerID, status];
   try {
     const record = await db.query(text, values);
     return record.rows[0];
@@ -72,7 +72,7 @@ export const checkIfAllPlayersAreReady = async (short_code: string): Promise<boo
   // find players by game getGamePlayers
   try {
     const players = await getGamePlayers(short_code);
-    return !players.some((player: Player) => !player.ready);
+    return !players.some((player: Player) => player.status !== 'ready');
   } catch (err: any) {
     console.log(err);
 		throw new Error(err);

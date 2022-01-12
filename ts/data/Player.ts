@@ -1,5 +1,13 @@
 export interface Player {
   id: string;
   name: string;
-  ready: boolean;
+  status: PlayerStatus
+}
+
+export enum PlayerStatus {
+  NEW = 'new',
+  READY = 'ready',
+  PLAYING = 'playing',
+  WAITING = 'waiting',
+  DONE = 'done'
 }
