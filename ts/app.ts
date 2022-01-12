@@ -20,7 +20,7 @@ import {
   updatePlayerReady,
   checkIfAllPlayersAreReady
 } from "./methods/players/Players";
-import { createNewGuessRecord } from "./methods/guesses/Guesses";
+import { processPlayerGameGuesses } from "./methods/guesses/Guesses";
 // import { 
 //   ServerToClientEvents, 
 //   ClientToServerEvents, 
@@ -168,13 +168,13 @@ app.get('/game-start/:short_code', async (req: any, res: any) => {
   }
 });
 
-app.post('/guess/:game/:player/:phrase', async (req: any, res: any) => {
-  const { game, player, phrase } = req.params;
-  const { guess } = req.body; 
-  const guessData = { player, game, phrase, guess };
+app.post('/guess/:game/:player', async (req: any, res: any) => {
+  const { game, player } = req.params;
+  const { guesses } = req.body; 
+  const guessData = { player, game, guesses };
   try { 
-    const record = await createNewGuessRecord(guessData);
-    return record;
+    const records = await processPlayerGameGuesses(guessData);
+    return records;
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
   }
