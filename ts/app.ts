@@ -12,15 +12,21 @@ import {
   populateMasterPhrases, 
   getSetOfPhrasesForGame 
 } from "./methods/phrases/Phrases";
-import { openNewGame, getGameAndPlayers } from "./methods/games/Games";
+import { 
+  openNewGame, 
+  getGameAndPlayers 
+} from "./methods/games/Games";
 import { 
   createNewPlayerRecord, 
   getGamePlayers, 
   addPlayerToGameMain,
   updatePlayerStatus,
-  checkIfAllPlayersAreReady
+  checkIfAllPlayersAreReady,
+  updateAllPlayersToPlaying
 } from "./methods/players/Players";
-import { processPlayerGameGuesses } from "./methods/guesses/Guesses";
+import { 
+  processPlayerGameGuesses 
+} from "./methods/guesses/Guesses";
 // import { 
 //   ServerToClientEvents, 
 //   ClientToServerEvents, 
@@ -127,6 +133,9 @@ app.post('/join-game', async (req: any, res: any) => {
   }
 });
 
+/**
+ * Returns Players and Status for Game
+ */
 app.get('/game/:short_code/players', async (req: any, res: any) => {
   // console.log(req.params.id);
   const { short_code } = req.params;
@@ -165,6 +174,7 @@ app.get('/game-start/:short_code', async (req: any, res: any) => {
   const { short_code } = req.params;
 
   try {
+    await updateAllPlayersToPlaying(short_code);
     const phrases = await getSetOfPhrasesForGame();
     res.send(phrases);
   } catch (err: any) {
@@ -172,12 +182,16 @@ app.get('/game-start/:short_code', async (req: any, res: any) => {
   }
 });
 
+/**
+ * Posts Guesses From Each Player
+ */
 app.post('/guess/:game/:player', async (req: any, res: any) => {
   const { game, player } = req.params;
   const { guesses } = req.body; 
   const guessData = { player, game, guesses };
   try { 
     const records = await processPlayerGameGuesses(guessData);
+    // await checkIfAllPlayerGuessesAreIn(game) // TODO
     return records;
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());

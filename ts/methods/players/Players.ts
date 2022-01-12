@@ -44,7 +44,8 @@ export const getGamePlayers = async (short_code: string): Promise<Player[]> => {
     const players = playerData.rows[0].players;
     // console.log(players);
     
-    const playerText = `SELECT * FROM players WHERE players.id = ANY($1::uuid[])`;
+    const playerText = `SELECT * FROM players WHERE players.id = ANY($1::uuid[]) 
+      ORDER BY created_at ASC`;
     const playerValue = [players];
     const playerInfo = await db.query(playerText, playerValue);
     return playerInfo.rows;
@@ -73,6 +74,26 @@ export const checkIfAllPlayersAreReady = async (short_code: string): Promise<boo
   try {
     const players = await getGamePlayers(short_code);
     return !players.some((player: Player) => player.status !== 'ready');
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
+
+export const updateAllPlayersToPlaying = async (short_code: string) => {
+
+  const text = `SELECT players FROM games WHERE games.short_code = $1`;
+  const values = [short_code];
+
+  try {
+    const playerData = await db.query(text, values);
+    const players = playerData.rows[0].players;
+    // console.log(players);
+    
+    const playerText = `UPDATE players SET status = 'playing' WHERE players.id = ANY($1::uuid[])`;
+    const playerValue = [players];
+    const playerInfo = await db.query(playerText, playerValue);
+    return playerInfo.rows;
   } catch (err: any) {
     console.log(err);
 		throw new Error(err);
