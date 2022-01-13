@@ -91,3 +91,20 @@ export const getGameAndPlayers = async (short_code: string): Promise<Game> => {
 		throw new Error(err);
   }
 }
+
+export const getGameByID = async (gameID: string): Promise<Game> => {
+  const text = `SELECT * FROM games WHERE id = $1`;
+  const values = [gameID];
+
+  try {
+    const game = await db.query(text, values);
+    if (!game.rows.length) {
+      console.log('error finding game');
+		  throw new Error('error finding game');
+    }
+    return game.rows[0];
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}

@@ -14,7 +14,8 @@ import {
 } from "./methods/phrases/Phrases";
 import { 
   openNewGame, 
-  getGameAndPlayers 
+  getGameAndPlayers,
+  getGameByID
 } from "./methods/games/Games";
 import { 
   createNewPlayerRecord, 
@@ -24,8 +25,10 @@ import {
   checkIfAllPlayersAreReady,
   updateAllPlayersToPlaying
 } from "./methods/players/Players";
+import { PlayerStatus } from "./data/Player";
 import { 
-  processPlayerGameGuesses 
+  processPlayerGameGuesses,
+  checkIfAllPlayerGuessesAreIn
 } from "./methods/guesses/Guesses";
 // import { 
 //   ServerToClientEvents, 
@@ -189,9 +192,17 @@ app.post('/guess/:game/:player', async (req: any, res: any) => {
   const { game, player } = req.params;
   const { guesses } = req.body; 
   const guessData = { player, game, guesses };
+
+  // TODO: 1/13: Working on this endpoint
   try { 
+    await updatePlayerStatus(player, PlayerStatus.WAITING); // IMPORTANT
     const records = await processPlayerGameGuesses(guessData);
-    // await checkIfAllPlayerGuessesAreIn(game) // TODO
+    const allComplete = await checkIfAllPlayerGuessesAreIn(game); // TODO
+    if (allComplete) {
+      const gameRec = await getGameByID(game);
+      const { short_code } = gameRec;
+      io.to(short_code).emit("connected", { action: "game_complete" });
+    }
     return records;
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());

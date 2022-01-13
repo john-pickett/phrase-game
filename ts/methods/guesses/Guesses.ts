@@ -41,3 +41,18 @@ export const createNewGuessRecord = async (record: any): Promise<Guess> => {
 		throw new Error(err);
   }
 }
+
+export const checkIfAllPlayerGuessesAreIn = async (game: string): Promise<boolean> => {
+  // game is game.id
+
+  // Check if all players are marked as waiting
+  // return boolean
+
+
+  try {
+    return false;
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
