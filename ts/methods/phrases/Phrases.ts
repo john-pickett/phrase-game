@@ -8,6 +8,13 @@ export const getSetOfPhrasesForGame = async () => {
   const text = `SELECT id as phrase_id, phrase FROM phrases`;
   try {
     const records = await db.query(text, null);
+    let counter = 1;
+    records.rows.map((row: any) => {
+      row.order_count = counter;
+      counter++;
+      return row;
+    });
+    
     return records.rows;
   } catch (err: any) {
     console.log(err);

@@ -4,7 +4,7 @@ const db = require('../../db/index');
 import { Guess } from "../../data/Guess";
 import { createNewPlayerGameM2MRecord } from "../player-game/PlayerGame";
 
-export const processPlayerGameGuesses = async (guessData: any) => {
+export const processPlayerGameGuesses = async (guessData: any): Promise<Guess[]> => {
   // { player, game, guesses }
 
   const records = [];
@@ -14,7 +14,8 @@ export const processPlayerGameGuesses = async (guessData: any) => {
         player: guessData.player,
         game: guessData.game,
         phrase: guessData.guesses[i].phrase_id,
-        guess: guessData.guesses[i].guess
+        guess: guessData.guesses[i].guess,
+        order_count: guessData.guesses[i].order_count
       }
       const savedRec = await createNewGuessRecord(curRec);
       records.push(savedRec);
@@ -26,12 +27,14 @@ export const processPlayerGameGuesses = async (guessData: any) => {
   }
 }
 
-export const createNewGuessRecord = async (record: any): Promise<Guess> => {
+export const createNewGuessRecord = async (record: Partial<Guess>): Promise<Guess> => {
+  // console.log('new ', record);
+  
   const id = uuidv4();
-  const { player, game, phrase, guess } = record;
-  const text = `INSERT INTO player_game_guesses (id, player, game, phrase, guess)
-    VALUES($1, $2, $3, $4, $5) RETURNING *;`;
-  const values = [id, player, game, phrase, guess];
+  const { player, game, phrase, guess, order_count } = record;
+  const text = `INSERT INTO player_game_guesses (id, player, game, phrase, guess, order_count)
+    VALUES($1, $2, $3, $4, $5, $6) RETURNING *;`;
+  const values = [id, player, game, phrase, guess, order_count];
 
   try {
     const record = await db.query(text, values);

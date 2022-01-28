@@ -5,4 +5,5 @@ export interface Guess {
   phrase: string;
   guess: string;
   matches?: string[];
+  order_count: number;
 }

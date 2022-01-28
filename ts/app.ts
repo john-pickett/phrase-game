@@ -93,6 +93,10 @@ app.post('/populate', async (req: any, res: any) => {
 /**
  * ACTUAL GAME ENDPOINTS
  */
+
+/**
+ * Creates new game, used by first player
+ */
 app.post('/new-game', async (req: any, res: any) => {
   const { player } = req.body;
   // console.log(req.body);
@@ -116,7 +120,9 @@ app.post('/new-game', async (req: any, res: any) => {
   }
 });
 
-  
+/**
+ * Used by other players, joins player to game
+ */
 app.post('/join-game', async (req: any, res: any) => {
   const short_code = req.query.code;
   const { player } = req.body;
@@ -165,7 +171,7 @@ app.put('/player-status/:playerID/:short_code', async (req: any, res: any) => {
     const allReady = await checkIfAllPlayersAreReady(short_code);
     if (allReady) {
       console.log('all players are ready');
-      io.to(short_code).emit("connected", { action: "all_players_ready" });
+      io.to(short_code).emit("connected", { action: "all_players_ready" }); // all players ready starts the game
     }
     res.send(result);
   } catch (err: any) {
@@ -173,6 +179,9 @@ app.put('/player-status/:playerID/:short_code', async (req: any, res: any) => {
   }
 });
 
+/**
+ * Once the game starts, clients ping this and get the phrases for the game
+ */
 app.get('/game-start/:short_code', async (req: any, res: any) => {
   const { short_code } = req.params;
 
