@@ -2,7 +2,7 @@ export {}
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db/index');
 import { Guess } from "../../data/Guess";
-import { createNewPlayerGameM2MRecord } from "../player-game/PlayerGame";
+// import { createNewPlayerGameM2MRecord } from "../player-game/PlayerGame";
 
 export const processPlayerGameGuesses = async (guessData: any): Promise<Guess[]> => {
   // { player, game, guesses }
@@ -57,5 +57,18 @@ export const checkIfAllPlayerGuessesAreIn = async (game: string): Promise<boolea
   } catch (err: any) {
     console.log(err);
 		throw new Error(err);
+  }
+}
+
+export const grabAllGuessesFromGame = async (gameID: string): Promise<Guess[]> => {
+  const text = `SELECT * FROM player_game_guesses WHERE game = $1`;
+  const values = [gameID];
+
+  try {
+    const records = await db.query(text, values);
+    return records.rows;
+  } catch (err: any) {
+    console.log(err);
+    throw new Error(err);
   }
 }

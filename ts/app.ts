@@ -26,10 +26,8 @@ import {
   updateAllPlayersToPlaying
 } from "./methods/players/Players";
 import { PlayerStatus } from "./data/Player";
-import { 
-  processPlayerGameGuesses,
-  checkIfAllPlayerGuessesAreIn
-} from "./methods/guesses/Guesses";
+import * as Guesses from './methods/guesses/Guesses';
+import * as Scores from './methods/scores/Scores';
 // import { 
 //   ServerToClientEvents, 
 //   ClientToServerEvents, 
@@ -47,7 +45,6 @@ const io = new Server(httpServer, {
     origin: "http://localhost:8080",
   }
 });
-
 
 const port = process.env.PORT;
 
@@ -73,9 +70,6 @@ io.on('connection', async (socket: any) => {
   app.set("socket", socket);
   
 });
-
-
-
 
 app.get('/', (req: any, res: any) => {
 	res.send('Hello blank game');
@@ -198,21 +192,38 @@ app.get('/game-start/:short_code', async (req: any, res: any) => {
  * Posts Guesses From Each Player
  */
 app.post('/guess/:game/:player', async (req: any, res: any) => {
-  const { game, player } = req.params;
+  const { game, player } = req.params; // both are ID
+  // console.log('game ', game);
+  // console.log('player ', player);
+  
   const { guesses } = req.body; 
+  // console.log('guesses ', guesses);
+  
   const guessData = { player, game, guesses };
 
   // TODO: 1/13: Working on this endpoint
   try { 
     await updatePlayerStatus(player, PlayerStatus.WAITING); // IMPORTANT
-    const records = await processPlayerGameGuesses(guessData);
-    const allComplete = await checkIfAllPlayerGuessesAreIn(game); // TODO
+    const records = await Guesses.processPlayerGameGuesses(guessData);
+    const allComplete = await Guesses.checkIfAllPlayerGuessesAreIn(game); // TODO
     if (allComplete) {
       const gameRec = await getGameByID(game);
       const { short_code } = gameRec;
       io.to(short_code).emit("connected", { action: "game_complete" });
     }
     return records;
+  } catch (err: any) {
+    res.status(err.code ? err.code : 400).send(err.toString());
+  }
+});
+
+app.get('/scores/:gameID', async (req: any, res: any) => {
+  const { gameID } = req.params;
+
+  try {
+    const guesses = await Guesses.grabAllGuessesFromGame(gameID);
+    const scores = await Scores.processPlayerGuessesAndScoreThem(guesses);
+    res.send(scores);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
   }

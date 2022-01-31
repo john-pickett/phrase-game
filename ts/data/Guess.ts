@@ -4,6 +4,7 @@ export interface Guess {
   game: string;
   phrase: string;
   guess: string;
-  matches?: string[];
+  match_count: number;
   order_count: number;
+  points?: number;
 }
