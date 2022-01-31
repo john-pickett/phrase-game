@@ -4,6 +4,11 @@ const db = require('../../db/index');
 import { Guess } from "../../data/Guess";
 // import { createNewPlayerGameM2MRecord } from "../player-game/PlayerGame";
 
+/**
+ * Processes/saves Guesses for Player
+ * @param guessData guesses from client
+ * @returns 
+ */
 export const processPlayerGameGuesses = async (guessData: any): Promise<Guess[]> => {
   // { player, game, guesses }
 

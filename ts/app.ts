@@ -203,12 +203,16 @@ app.post('/guess/:game/:player', async (req: any, res: any) => {
 
   // TODO: 1/13: Working on this endpoint
   try { 
+    // Player enters waiting room after they submit their guesses
     await updatePlayerStatus(player, PlayerStatus.WAITING); // IMPORTANT
     const records = await Guesses.processPlayerGameGuesses(guessData);
     const allComplete = await Guesses.checkIfAllPlayerGuessesAreIn(game); // TODO
     if (allComplete) {
       const gameRec = await getGameByID(game);
       const { short_code } = gameRec;
+
+      const guesses = await Guesses.grabAllGuessesFromGame(game);
+      await Scores.processPlayerGuessesAndScoreThem(guesses);
       io.to(short_code).emit("connected", { action: "game_complete" });
     }
     return records;
@@ -217,13 +221,30 @@ app.post('/guess/:game/:player', async (req: any, res: any) => {
   }
 });
 
-app.get('/scores/:gameID', async (req: any, res: any) => {
-  const { gameID } = req.params;
+// app.get('/scores/:gameID', async (req: any, res: any) => {
+//   const { gameID } = req.params;
 
-  try {
-    const guesses = await Guesses.grabAllGuessesFromGame(gameID);
-    const scores = await Scores.processPlayerGuessesAndScoreThem(guesses);
-    res.send(scores);
+//   try { // TODO: Figure out where these methods go 
+//           // - in endpoint above when allComplete??
+//     const guesses = await Guesses.grabAllGuessesFromGame(gameID);
+//     const scores = await Scores.processPlayerGuessesAndScoreThem(guesses);
+
+//     res.send(scores);
+//   } catch (err: any) {
+//     res.status(err.code ? err.code : 400).send(err.toString());
+//   }
+// });
+
+/**
+ * Called by each client to get final game scores
+ */
+// TODO: Figure out winner of each game, and how/where to store that record
+app.get('/scores/:playerID/:gameID', async (req: any, res: any) => {
+  const { playerID, gameID  } = req.params;
+
+  try { 
+    const records = await Scores.getPlayerScoresFromGame(playerID, gameID);
+    res.send(records);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
   }

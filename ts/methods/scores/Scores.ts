@@ -1,6 +1,7 @@
 export {}
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db/index');
+import { match } from "assert";
 import { Guess } from "../../data/Guess";
 import { Score } from "../../data/Score";
 
@@ -29,8 +30,12 @@ export const processPlayerGuessesAndScoreThem = async (guesses: Guess[]) => {
 
   // Process scores and add up cumulative totalScore
   totalScores = checkScoresAndAddTotalScore(scores);
-
-  return totalScores;
+  const savedScores = [];
+  for (let i = 0; i < totalScores.length; i++) {
+    const savedRec = await createNewScoreRecord(totalScores[i]);
+    savedScores.push(savedRec);
+  }
+  return savedScores;
 }
 
 const checkScoresAndAddTotalScore = (scores: Score[]): Score[] => {
@@ -109,4 +114,34 @@ const scoreMatches = (guess: Guess): Score => {
   }
   // @ts-ignore
   return guess;
+}
+
+export const createNewScoreRecord = async (record: Score) => {
+  const id = uuidv4();
+  const { player, game, phrase, guess, order_count, match_count, points, total_score } = record;
+  const text = `INSERT INTO scores (id, player, game, phrase, points, total_score, 
+    match_count, order_count, guess) 
+    VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *;`;
+  const values = [id, player, game, phrase, points, total_score, match_count, order_count, guess];
+
+  try {
+    const record = await db.query(text, values);
+    return record.rows[0];
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
+
+export const getPlayerScoresFromGame = async (playerID: string, gameID: string) => {
+  const text = `SELECT * FROM scores WHERE player = $1 AND game = $2;`;
+  const values = [playerID, gameID];
+
+  try {
+    const records = await db.query(text, values);
+    return records.rows;
+  } catch (err: any) {
+    
+  }
 }
