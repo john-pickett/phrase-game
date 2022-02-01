@@ -2,7 +2,8 @@ export {}
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db/index');
 import { Guess } from "../../data/Guess";
-// import { createNewPlayerGameM2MRecord } from "../player-game/PlayerGame";
+import { Player } from "../../data/Player";
+import * as Players from '../players/Players';
 
 /**
  * Processes/saves Guesses for Player
@@ -50,11 +51,11 @@ export const createNewGuessRecord = async (record: Partial<Guess>): Promise<Gues
   }
 }
 
-export const checkIfAllPlayerGuessesAreIn = async (gameID: string): Promise<boolean> => {
+export const checkIfAllPlayerGuessesAreIn = async (short_code: string): Promise<boolean> => {
   // Check if all players are marked as waiting
   // return boolean
-
-
+  const players = await Players.getGamePlayers(short_code);
+  return !players.some((player: Player) => player.status !== 'waiting');
   try {
     return false;
   } catch (err: any) {

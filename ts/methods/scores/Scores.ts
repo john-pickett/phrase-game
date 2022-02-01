@@ -69,7 +69,7 @@ const checkPointsAndAddTotalScore = (scores: Score[]): Score[] => {
       highScore = scoreTally[score]
     }
   }
-  console.log('high score: ', highScore);
+  // console.log('high score: ', highScore);
   scores.filter(score => score.total_score == highScore).map(score => {
     score.winner = true;
     return score;
@@ -150,6 +150,23 @@ export const createNewScoreRecord = async (record: Score) => {
 export const getPlayerScoresFromGame = async (playerID: string, gameID: string) => {
   const text = `SELECT * FROM scores WHERE player = $1 AND game = $2;`;
   const values = [playerID, gameID];
+
+  try {
+    const records = await db.query(text, values);
+    return records.rows;
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
+
+export const getAllScoresFromCompletedGame = async (gameID: string) => {
+  const text = `SELECT s.id, s.points, s.total_score, s.order_count, s.guess, s.winner,
+    p.name as player, ph.phrase FROM scores s
+    JOIN players p ON s.player = p.id
+    JOIN phrases ph ON s.phrase = ph.id
+    WHERE s.game = $1`;
+  const values = [gameID];
 
   try {
     const records = await db.query(text, values);

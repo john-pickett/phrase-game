@@ -203,13 +203,13 @@ app.post('/guess/:game/:player', async (req: any, res: any) => {
 
   try { 
     // Player enters waiting room after they submit their guesses
-    await updatePlayerStatus(player, PlayerStatus.WAITING); // IMPORTANT
+    await updatePlayerStatus(player, PlayerStatus.WAITING); // IMPORTANT for allComplete below
     const records = await Guesses.processPlayerGameGuesses(guessData);
-    const allComplete = await Guesses.checkIfAllPlayerGuessesAreIn(game); // TODO
-    if (allComplete) {
-      const gameRec = await getGameByID(game);
-      const { short_code } = gameRec;
 
+    const gameRec = await getGameByID(game);
+    const { short_code } = gameRec;
+    const allComplete = await Guesses.checkIfAllPlayerGuessesAreIn(short_code);
+    if (allComplete) {
       const guesses = await Guesses.grabAllGuessesFromGame(game);
       await Scores.processPlayerGuessesAndScoreThem(guesses);
       io.to(short_code).emit("connected", { action: "game_complete" });
@@ -224,13 +224,10 @@ app.post('/guess/:game/:player', async (req: any, res: any) => {
  * Called by all clients after game completion
  */
 app.get('/scores/:gameID', async (req: any, res: any) => {
-  console.log(`This shouldn't be used in the game. Here for dev purposes`);
-  
   const { gameID } = req.params;
 
   try {
-    const guesses = await Guesses.grabAllGuessesFromGame(gameID);
-    const scores = await Scores.processPlayerGuessesAndScoreThem(guesses);
+    const scores = await Scores.getAllScoresFromCompletedGame(gameID);
     res.send(scores);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
@@ -240,8 +237,8 @@ app.get('/scores/:gameID', async (req: any, res: any) => {
 /**
  * Won't be called in game
  */
-
 app.get('/scores/:playerID/:gameID', async (req: any, res: any) => {
+  console.log(`This shouldn't be used in the game. Here for dev purposes`);
   const { playerID, gameID  } = req.params;
 
   try { 
