@@ -201,7 +201,6 @@ app.post('/guess/:game/:player', async (req: any, res: any) => {
   
   const guessData = { player, game, guesses };
 
-  // TODO: 1/13: Working on this endpoint
   try { 
     // Player enters waiting room after they submit their guesses
     await updatePlayerStatus(player, PlayerStatus.WAITING); // IMPORTANT
@@ -221,24 +220,27 @@ app.post('/guess/:game/:player', async (req: any, res: any) => {
   }
 });
 
-// app.get('/scores/:gameID', async (req: any, res: any) => {
-//   const { gameID } = req.params;
+/**
+ * Called by all clients after game completion
+ */
+app.get('/scores/:gameID', async (req: any, res: any) => {
+  console.log(`This shouldn't be used in the game. Here for dev purposes`);
+  
+  const { gameID } = req.params;
 
-//   try { // TODO: Figure out where these methods go 
-//           // - in endpoint above when allComplete??
-//     const guesses = await Guesses.grabAllGuessesFromGame(gameID);
-//     const scores = await Scores.processPlayerGuessesAndScoreThem(guesses);
-
-//     res.send(scores);
-//   } catch (err: any) {
-//     res.status(err.code ? err.code : 400).send(err.toString());
-//   }
-// });
+  try {
+    const guesses = await Guesses.grabAllGuessesFromGame(gameID);
+    const scores = await Scores.processPlayerGuessesAndScoreThem(guesses);
+    res.send(scores);
+  } catch (err: any) {
+    res.status(err.code ? err.code : 400).send(err.toString());
+  }
+});
 
 /**
- * Called by each client to get final game scores
+ * Won't be called in game
  */
-// TODO: Figure out winner of each game, and how/where to store that record
+
 app.get('/scores/:playerID/:gameID', async (req: any, res: any) => {
   const { playerID, gameID  } = req.params;
 

@@ -8,4 +8,5 @@ export interface Score {
   guess: string;
   order_count: number;
   match_count: number;
+  winner?: boolean;
 }

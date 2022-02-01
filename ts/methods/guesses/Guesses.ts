@@ -50,9 +50,7 @@ export const createNewGuessRecord = async (record: Partial<Guess>): Promise<Gues
   }
 }
 
-export const checkIfAllPlayerGuessesAreIn = async (game: string): Promise<boolean> => {
-  // game is game.id
-
+export const checkIfAllPlayerGuessesAreIn = async (gameID: string): Promise<boolean> => {
   // Check if all players are marked as waiting
   // return boolean
 

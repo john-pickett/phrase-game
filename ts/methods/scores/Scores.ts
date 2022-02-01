@@ -29,42 +29,51 @@ export const processPlayerGuessesAndScoreThem = async (guesses: Guess[]) => {
   }
 
   // Process scores and add up cumulative totalScore
-  totalScores = checkScoresAndAddTotalScore(scores);
+  // @ts-ignore
+  totalScores = checkPointsAndAddTotalScore(scores);
   const savedScores = [];
   for (let i = 0; i < totalScores.length; i++) {
+    // @ts-ignore
     const savedRec = await createNewScoreRecord(totalScores[i]);
     savedScores.push(savedRec);
   }
   return savedScores;
 }
 
-const checkScoresAndAddTotalScore = (scores: Score[]): Score[] => {
+const checkPointsAndAddTotalScore = (scores: Score[]): Score[] => {
  /*
-  const scores = {
+  const scoreTally = {
     f1978094: 0,
     6b865028: 10
   }
  */
 
-  const scoreTally = {};
+  const scoreTally: any = {};
 
   for (let i = 0; i < scores.length; i++) {
-    // console.log('score ', scoreTally);
-    
-    const playerTag = scores[i].player.split('-')[0];
-    // @ts-ignore
+    // the playerTag assumes there won't be any exact matches in the first 8 uuid digits
+    // pretty safe assumption but could be RF'ed later
+    const playerTag = scores[i].player.split('-')[0]; 
     if (scoreTally[playerTag]) {
-      // @ts-ignore
       scoreTally[playerTag] += scores[i].points;
-      // @ts-ignore
       scores[i].total_score = scoreTally[playerTag];
     } else {
-      // @ts-ignore
       scoreTally[playerTag] = scores[i].points;
-      // @ts-ignore
       scores[i].total_score = scores[i].points;
     }
   }
+
+  let highScore = 0;
+  for (let score in scoreTally) {
+    if (scoreTally[score] > highScore) {
+      highScore = scoreTally[score]
+    }
+  }
+  console.log('high score: ', highScore);
+  scores.filter(score => score.total_score == highScore).map(score => {
+    score.winner = true;
+    return score;
+  })
 
   return scores;
 }
@@ -104,7 +113,7 @@ const findMatch = (guessA: string, guessB: string): boolean => {
  * @param guess Guess
  * @returns guess Guess
  */
-const scoreMatches = (guess: Guess): Score => {
+const scoreMatches = (guess: Guess) => {
   if (guess.match_count < 1) {
     guess.points = 0;
   } else if (guess.match_count == 1) {
@@ -112,18 +121,22 @@ const scoreMatches = (guess: Guess): Score => {
   } else if (guess.match_count) {
     guess.points = 5;
   }
-  // @ts-ignore
   return guess;
 }
 
 export const createNewScoreRecord = async (record: Score) => {
   const id = uuidv4();
   const { player, game, phrase, guess, order_count, match_count, points, total_score } = record;
+  let { winner } = record;
+  if (!winner) {
+    winner = false;
+  }
   const text = `INSERT INTO scores (id, player, game, phrase, points, total_score, 
-    match_count, order_count, guess) 
-    VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    match_count, order_count, guess, winner) 
+    VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *;`;
-  const values = [id, player, game, phrase, points, total_score, match_count, order_count, guess];
+  const values = [id, player, game, phrase, points, 
+    total_score, match_count, order_count, guess, winner];
 
   try {
     const record = await db.query(text, values);
@@ -142,6 +155,7 @@ export const getPlayerScoresFromGame = async (playerID: string, gameID: string) 
     const records = await db.query(text, values);
     return records.rows;
   } catch (err: any) {
-    
+    console.log(err);
+		throw new Error(err);
   }
 }
