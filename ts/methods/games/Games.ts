@@ -2,9 +2,11 @@ export {}
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db/index');
 import { getGamePlayers } from "../players/Players";
-import { createNewPlayerGameM2MRecord } from "../player-game/PlayerGame";
 import { Game, GameStatus } from "../../data/Game";
 import { Player } from "../../data/Player";
+import * as Phrases from '../phrases/Phrases';
+import { Phrase } from "../../data/Phrase";
+// import { createNewPlayerGameM2MRecord } from "../player-game/PlayerGame";
 
 
 export const openNewGame = async (player: Player): Promise<Game> => {
@@ -62,9 +64,30 @@ const createNewGameRecord = async (id: string, short_code: string, status: GameS
   } 
 }
 
+export const addPhrasesToGame = async (short_code: string) => {
+  
+
+  try {
+    const phraseData = await Phrases.getRandomSetOfPhrasesForGame();
+    const phrases = phraseData.map((phrase: Phrase) => {
+      return phrase.id;
+    });
+    // console.log('ph ', phrases);
+    
+    const text = `UPDATE games SET phrases = $2 WHERE short_code = $1 RETURNING *;`;
+    const values = [short_code, phrases];
+
+    await db.query(text, values);
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
+
 export const addPlayerToGame = async (short_code: string, playerID: string): Promise<Game> => {
   // find game by short_code, add player to players
-  const text = `UPDATE games SET player_count = player_count + 1, players = array_append(players, $2::uuid) WHERE short_code = $1 RETURNING *`;
+  const text = `UPDATE games SET player_count = player_count + 1, 
+    players = array_append(players, $2::uuid) WHERE short_code = $1 RETURNING *`;
   const values = [short_code, playerID];
 
   try {

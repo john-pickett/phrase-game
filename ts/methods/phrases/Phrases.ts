@@ -4,7 +4,7 @@ const db = require('../../db/index');
 import { Phrase } from '../../data/Phrase';
 import masterPhrases from './MasterPhrases.json';
 
-export const getSetOfPhrasesForGame = async () => {
+export const getRandomSetOfPhrasesForGame = async (): Promise<Phrase[]> => {
   const text = `SELECT * FROM phrases ORDER BY RANDOM() LIMIT 10;`;
   try {
     const records = await db.query(text, null);
@@ -15,6 +15,22 @@ export const getSetOfPhrasesForGame = async () => {
       return row;
     });
     
+    return records.rows;
+  } catch (err: any) {
+    console.log(err);
+		throw new Error(err);
+  }
+}
+
+export const getGamePhrases = async (short_code: string) => {
+  // `SELECT * FROM players p WHERE p.id = ANY($1::uuid[])` 
+  const text = `SELECT p.id, p.phrase FROM games g JOIN phrases p 
+    ON p.id = ANY(phrases::uuid[])
+    WHERE g.short_code = $1`;
+  const values = [short_code];
+
+  try {
+    const records = await db.query(text, values);
     return records.rows;
   } catch (err: any) {
     console.log(err);

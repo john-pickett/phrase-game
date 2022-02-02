@@ -8,14 +8,12 @@ const express = require('express');
 import { createServer } from "http";
 import { Server } from "socket.io";
 const db = require('./db');
-import { 
-  populateMasterPhrases, 
-  getSetOfPhrasesForGame 
-} from "./methods/phrases/Phrases";
+import * as Phrases from "./methods/phrases/Phrases";
 import { 
   openNewGame, 
   getGameAndPlayers,
-  getGameByID
+  getGameByID,
+  addPhrasesToGame
 } from "./methods/games/Games";
 import { 
   createNewPlayerRecord, 
@@ -77,7 +75,7 @@ app.get('/', (req: any, res: any) => {
 
 app.post('/populate', async (req: any, res: any) => {
   try {
-    const records = await populateMasterPhrases();
+    const records = await Phrases.populateMasterPhrases();
     res.send(records);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
@@ -100,11 +98,12 @@ app.post('/new-game', async (req: any, res: any) => {
     const socket = req.app.get("socket");
     const playerRec = await createNewPlayerRecord(player);
     const game = await openNewGame(playerRec);
+    await addPhrasesToGame(game.short_code);
     game.playerID = playerRec.id;
     const short_code = game.short_code;
     if (socket) {
       // socket should always be defined when there is a client
-      // this if () is only for postman
+      // this if () is only for postman (i.e., no client with calling with postman)
       socket.join(short_code); // joining game owner to game socket id (game.short_code)
     }
     
@@ -181,7 +180,7 @@ app.get('/game-start/:short_code', async (req: any, res: any) => {
 
   try {
     await updateAllPlayersToPlaying(short_code);
-    const phrases = await getSetOfPhrasesForGame();
+    const phrases = await Phrases.getGamePhrases(short_code);
     res.send(phrases);
   } catch (err: any) {
     res.status(err.code ? err.code : 400).send(err.toString());
