@@ -161,8 +161,9 @@ export const getPlayerScoresFromGame = async (playerID: string, gameID: string) 
 }
 
 export const getAllScoresFromCompletedGame = async (gameID: string) => {
-  const text = `SELECT s.id, s.points, s.total_score, s.order_count, s.guess, s.winner,
-    p.name as player, ph.phrase FROM scores s
+  const text = `SELECT s.id, s.points, s.total_score, s.order_count, 
+    s.guess, s.winner, p.name as player, p.id as player_id, ph.phrase 
+    FROM scores s
     JOIN players p ON s.player = p.id
     JOIN phrases ph ON s.phrase = ph.id
     WHERE s.game = $1`;

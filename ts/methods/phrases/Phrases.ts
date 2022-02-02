@@ -5,7 +5,7 @@ import { Phrase } from '../../data/Phrase';
 import masterPhrases from './MasterPhrases.json';
 
 export const getSetOfPhrasesForGame = async () => {
-  const text = `SELECT id as phrase_id, phrase FROM phrases`;
+  const text = `SELECT * FROM phrases ORDER BY RANDOM() LIMIT 10;`;
   try {
     const records = await db.query(text, null);
     let counter = 1;
