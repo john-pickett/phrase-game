@@ -65,17 +65,20 @@ const createNewGameRecord = async (id: string, short_code: string, status: GameS
 }
 
 export const addPhrasesToGame = async (short_code: string) => {
-  
+  // TODO: Need order_count on each phrase
+  // change uuid[] to jsonb and add { phrase: xyz, order_count: 1 }
 
   try {
     const phraseData = await Phrases.getRandomSetOfPhrasesForGame();
-    const phrases = phraseData.map((phrase: Phrase) => {
-      return phrase.id;
-    });
+    console.log('ph ', phraseData);
+    
+    // const phrases = phraseData.map((phrase: Phrase) => {
+    //   return phrase.id;
+    // });
     // console.log('ph ', phrases);
     
     const text = `UPDATE games SET phrases = $2 WHERE short_code = $1 RETURNING *;`;
-    const values = [short_code, phrases];
+    const values = [short_code, JSON.stringify(phraseData)];
 
     await db.query(text, values);
   } catch (err: any) {

@@ -5,7 +5,7 @@ import { Phrase } from '../../data/Phrase';
 import masterPhrases from './MasterPhrases.json';
 
 export const getRandomSetOfPhrasesForGame = async (): Promise<Phrase[]> => {
-  const text = `SELECT * FROM phrases ORDER BY RANDOM() LIMIT 10;`;
+  const text = `SELECT id as phrase_id, phrase FROM phrases ORDER BY RANDOM() LIMIT 10;`;
   try {
     const records = await db.query(text, null);
     let counter = 1;
@@ -24,14 +24,13 @@ export const getRandomSetOfPhrasesForGame = async (): Promise<Phrase[]> => {
 
 export const getGamePhrases = async (short_code: string) => {
   // `SELECT * FROM players p WHERE p.id = ANY($1::uuid[])` 
-  const text = `SELECT p.id, p.phrase FROM games g JOIN phrases p 
-    ON p.id = ANY(phrases::uuid[])
+  const text = `SELECT g.phrases FROM games g
     WHERE g.short_code = $1`;
   const values = [short_code];
 
   try {
     const records = await db.query(text, values);
-    return records.rows;
+    return records.rows[0].phrases;
   } catch (err: any) {
     console.log(err);
 		throw new Error(err);
